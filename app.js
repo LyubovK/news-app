@@ -73,6 +73,16 @@ const newsService = (function () {
     },
   };
 })();
+
+//ekements
+const form = document.forms['newsControls'];
+const countrySelect = form.elements['country'];
+const searchInput = form.elements['search'];
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  loadNews();
+});
 //  init selects
 document.addEventListener('DOMContentLoaded', function () {
   M.AutoInit();
@@ -82,12 +92,32 @@ document.addEventListener('DOMContentLoaded', function () {
 //load news function
 
 const loadNews = () => {
-  newsService.topHeadLines('ua', onGetResponse);
+  showLoader();
+
+  const country = countrySelect.value;
+  const searchText = searchInput.value;
+
+  if (!searchText) {
+    newsService.topHeadLines(country, onGetResponse);
+  } else {
+    newsService.everything(searchText, onGetResponse);
+  }
 };
 
 //function on get response from server
 
 const onGetResponse = (err, res) => {
+  removeLoader();
+
+  if (err) {
+    showAlert(err, 'error-msg');
+  }
+
+  if (!res.articles.length) {
+    //show msg
+    return;
+  }
+
   renderNews(res.articles);
 };
 
@@ -95,6 +125,9 @@ const onGetResponse = (err, res) => {
 
 const renderNews = (news) => {
   const newsContainer = document.querySelector('.news-container .row');
+  if (newsContainer.children.length) {
+    clearContainer(newsContainer);
+  }
   let fragment = '';
 
   news.forEach((newsItem) => {
@@ -103,6 +136,15 @@ const renderNews = (news) => {
   });
   // console.log(fragment);
   newsContainer.insertAdjacentHTML('afterbegin', fragment);
+};
+
+const clearContainer = (container) => {
+  // container.innerHTML = '';
+  let child = container.lastElementChild;
+  while (child) {
+    container.removeChild(child);
+    child = container.lastElementChild;
+  }
 };
 
 // news item template function
@@ -124,4 +166,28 @@ const newsTemplate = ({ urlToImage, title, url, description }) => {
     </div>
   </div>
   `;
+};
+
+const showAlert = (msg, type = 'success') => {
+  M.toasts({ html: msg, classes: type });
+};
+
+const showLoader = () => {
+  document.body.insertAdjacentHTML(
+    'afterbegin',
+    `
+    <div class="progress">
+      <div class="indeterminate"></div>
+    </div>
+    `
+  );
+};
+
+//remove Loader func
+
+const removeLoader = () => {
+  const loader = document.querySelector('.progress');
+  if (loader) {
+    loader.remove();
+  }
 };
