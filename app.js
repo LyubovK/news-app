@@ -62,9 +62,9 @@ const newsService = (function () {
   const apiUrl = 'https://newsapi.org/v2';
 
   return {
-    topHeadLines(country = 'ua', cb) {
+    topHeadLines(country = 'ua', category = 'general', cb) {
       http.get(
-        `${apiUrl}/top-headlines?country=${country}&apiKey=${apiKey}`,
+        `${apiUrl}/top-headlines?country=${country}&category=${category}&apiKey=${apiKey}`,
         cb
       );
     },
@@ -77,6 +77,7 @@ const newsService = (function () {
 //ekements
 const form = document.forms['newsControls'];
 const countrySelect = form.elements['country'];
+const categorySelect = form.elements['category'];
 const searchInput = form.elements['search'];
 
 form.addEventListener('submit', (e) => {
@@ -95,10 +96,11 @@ const loadNews = () => {
   showLoader();
 
   const country = countrySelect.value;
+  const category = categorySelect.value;
   const searchText = searchInput.value;
 
   if (!searchText) {
-    newsService.topHeadLines(country, onGetResponse);
+    newsService.topHeadLines(country, category, onGetResponse);
   } else {
     newsService.everything(searchText, onGetResponse);
   }
@@ -148,13 +150,14 @@ const clearContainer = (container) => {
 };
 
 // news item template function
-
+const imgDefault =
+  'https://brodnowski.pl/themes/szpital/images/default-img.gif';
 const newsTemplate = ({ urlToImage, title, url, description }) => {
   return `
   <div class="col s12">
     <div class="card">
       <div class="card-image">
-        <img src="${urlToImage}">
+        <img src="${urlToImage || imgDefault}">
         <span>${title || ''}</span>
       </div>
       <div class="card-content">
